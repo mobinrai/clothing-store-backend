@@ -8,7 +8,7 @@ const addressSchema = new mongoose.Schema({
     state: String,
     postalCode: String,
     country: String,
-  isDefault: { type: Boolean, default: false }
+    isDefault: { type: Boolean, default: false }
 }, { _id: false });
 
-export default AddressModel = mongoose.model("Address", addressSchema);
+export default addressSchema;

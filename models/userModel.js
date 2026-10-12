@@ -1,7 +1,12 @@
 import mongoose from "mongoose";
+import AddressModel from "./addressModel.js";
 
 const userSchema = new mongoose.Schema({
-    name: {
+    firstName: {
+        type: String,
+        required: true
+    },
+    lastName: {
         type: String,
         required: true
     },
@@ -19,11 +24,15 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Role"
     },
-    addresses: [addressSchema],
+    addresses: [AddressModel],
     wishlist: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product"
-    }]
+    }],
+    tokenVersion: {
+        type: Number,
+        default: 0
+    }
     }, { timestamps: true });
 
-export default UserModel = mongoose.model("User", userSchema);
+export default mongoose.model("User", userSchema);

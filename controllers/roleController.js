@@ -1,67 +1,93 @@
 import Roles from '../models/roleModel.js'
+import { getSlug } from '../utils/common.js'
 
 export const getAllRoles = async (req,res)=>{
-    const roles = await Roles.find()
-    return res.status(200).send(roles)
+    try {
+        const roles = await Roles.find()
+        console.log(roles);
+        return res.status(200).json({success:true, roles})
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({success:false, message:error.message})
+    }
 }
 
 export const getRole=async(req, res)=>{
-    const role = await Roles.findOne({slug:req.params.slug})
-    return res.status(200).send(role)
+    try {
+        const role = await Roles.findOne({slug:req.params.slug})
+        return res.status(200).json({success:true, role})
+    } catch (error) {
+
+        return res.status(500).json({success:false, message:error.message})
+    }
 }
 
 export const createRole = async(req,res)=>{
-    const name = req.body.name
-    const slug = await checkSlugExist(name)
-    const newRole = new Roles({slug, name})
-    const role = await newRole.save()
-
-    res.status(200).json(role)
+    try {
+        const name = req.body.name
+        const slug = await getSlug(name, Roles)
+        const newRole = new Roles({slug, name})
+        const role = await newRole.save()
+        return res.status(200).json({success:true, role})
+    } catch (error) {
+        return res.status(500).json({success:false, message:error.message})
+    }
 }
 
 export const editRole = async(req,res)=>{
-    const _id = req.params.id
-    let roleExist = await Roles.findOne({_id}) 
-    
-    if(!roleExist){
-        return res.status(404).send('Couldn\'t find role')
+    try {
+        const _id = req.params.id
+        let roleExist = await Roles.findOne({_id}) 
+        
+        if(!roleExist){
+            return res.status(404).send('Couldn\'t find role')
+        }
+        const name=req.body.name
+        const slug = await getSlug(name, Roles)
+        const editRole = await Roles.findOneAndUpdate({_id},{name, slug})
+        
+        if(!editRole){
+            return res.status(500).json({messsae:'Couldn\'t update role'})
+        }
+        return res.status(200).json({success:true,role:editRole,message:"Role edited succesfully"})
+    } catch (error) {
+        return res.status(500).json({success:false, message:error.message})
     }
-    const name=req.body.name
-    const slug = await checkSlugExist(name)
-    const editRole = await Roles.findOneAndUpdate({_id},{name, slug},{new:true})
-    
-    if(!editRole){
-        return res.status(500).send('Couldn\'t update role')
+}
+
+export const restoreRole = async(req,res)=>{
+    try {
+        const _id = req.params.id
+        let roleExist = await Roles.findOne({_id})
+        if(!roleExist){
+            return res.status(404).json({message:'Couldn\'t find role'})
+        }
+        const isDeleted = await Roles.findOneAndUpdate({_id}, {isDeleted:false})
+        if(!isDeleted){
+            return res.status(500).json({message:'Couldn\'t restore role'})
+        }
+        return res.status(200).json({success:true,message:"Role restore succesfully"})
+    } catch (error) {
+        return res.status(500).json({success:false, message:error.message})
     }
-    res.status(200).json(editRole)
 }
 
 export const deleteRole = async(req,res)=>{
-    const _id = req.params.id
-
-    let roleExist = await Roles.findOne({_id})
-    if(!roleExist){
-        return res.status(404).send('Couldn\'t find role')
-    }
-
-    const isDeleted = await Roles.findOneAndUpdate({_id}, {isDeleted:true}, {new:true})
-
-    if(!isDeleted){
-        return res.status(500).send('Couldn\'t delete role')
-    }
     
-    res.status(200).send("Role deleted succesfully")
-}
+    try {
+        const _id = req.params.id
+        let roleExist = await Roles.findOne({_id})
+        if(!roleExist){
+            return res.status(404).json({message:'Couldn\'t find role'})
+        }
+        const isDeleted = await Roles.findOneAndUpdate({_id}, {isDeleted:true})
 
-
-async function checkSlugExist(name){
-    let slug = name.replace(/ /g,"-").toLowerCase()
-    let slugExist = await Roles.findOne({slug}) 
-    let counter =2
-    while(slugExist){
-        slug = `${slug}-${counter}`
-        slugExist = await Roles.findOne({slug})
-        counter++
+        if(!isDeleted){
+            return res.status(500).json({message:'Couldn\'t delete role'})
+        }
+        
+        return res.status(200).json({success:true,message:"Role deleted succesfully"})
+    } catch (error) {
+        return res.status(500).json({success:false, message:error.message})
     }
-    return slug
 }

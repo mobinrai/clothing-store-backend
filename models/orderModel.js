@@ -50,4 +50,4 @@ const orderSchema = new mongoose.Schema({
     totalAmount: Number
 }, { timestamps: true });
 
-export default OrderModel = mongoose.model("Order", orderSchema);
+export default mongoose.model("Order", orderSchema);
